@@ -1,9 +1,8 @@
 import axios from "axios";
 import { getCookie, setCookie, deleteCookie } from "./cookies";
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000";
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
 
-// Create axios instance
 const api = axios.create({
   baseURL: API_BASE_URL,
   headers: {
@@ -11,7 +10,6 @@ const api = axios.create({
   },
 });
 
-// Request interceptor to add auth token
 api.interceptors.request.use(
   (config) => {
     const token = getCookie("accessToken");
@@ -25,7 +23,6 @@ api.interceptors.request.use(
   }
 );
 
-// Response interceptor to handle token refresh
 api.interceptors.response.use(
   (response) => response,
   async (error) => {
@@ -48,11 +45,9 @@ api.interceptors.response.use(
         setCookie("accessToken", accessToken);
         setCookie("refreshToken", newRefreshToken);
 
-        // Retry original request with new token
         originalRequest.headers.Authorization = `Bearer ${accessToken}`;
         return api(originalRequest);
       } catch (refreshError) {
-        // Refresh failed, redirect to login
         deleteCookie("accessToken");
         deleteCookie("refreshToken");
         window.location.href = "/";
@@ -65,7 +60,6 @@ api.interceptors.response.use(
 );
 
 export const apiService = {
-  // Auth endpoints
   login: (email: string, password: string) =>
     api.post("/api/admin/login", { email, password }),
 
@@ -77,7 +71,6 @@ export const apiService = {
 
   getProfile: () => api.get("/api/admin/profile"),
 
-  // Verification endpoints
   getPendingVerifications: () =>
     api.get("/api/admin/documents/pending-verifications"),
 
